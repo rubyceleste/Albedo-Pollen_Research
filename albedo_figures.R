@@ -2,8 +2,6 @@ library(ggplot2)
 library(tidyverse)
 #starting to graph the data 
 
-
-
 #dat_all = readRDS('R scripts/dat_all-spring.RDS')
 #dat_all = readRDS('R scripts/dat_all-summer.RDS')
 #dat_all = readRDS('R scripts/dat_all-fall.RDS')
@@ -113,6 +111,15 @@ ggplot() +
 #lct with albedo histo
 #ggplot(data=dat_all, aes(lct_alb, color=LCT)) +
 #  geom_histogram(fill='white')
+
+
+
+#showing the proportion of each taxon around Canada
+ggplot() +
+  geom_point(data=dat_pollen_melt, aes(x=long, y=lat, color=value)) +
+  facet_wrap(~variable)+
+  scale_colour_gradient(low="black", high="pink")
+
 
 #figure 6
 ggplot(data=dat_all, aes(x=lct_alb, y=prop_summed, color=LCT)) +

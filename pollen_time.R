@@ -1,35 +1,43 @@
-pollen_time = readRDS('pollen/pollen-sites-time-series.RDS')
+library(raster)
+library(dplyr)
+pollen_time = readRDS('pollen/pollen-sites-times-series-all.RDS')
 
+pollen_time = data.frame(pollen_time)
 
 #renaming to match LCT file 
 names(pollen_time)[10] <- 'Artemisia'
 
 
-#creating function to calculate proportions 
-prop = function(x){
-  x/sum(x)}
+xy= pollen_time[,1:2]
 
+#assigning a crs to the pollen coordinates
+spdf <- SpatialPointsDataFrame(coords = xy, data = pollen_time,
+                               proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+
+#transforming to the albedo crs: epsg 102001
+pol_transform = spTransform(spdf, alb_proj)
+
+#separating counts and coordinates columns
 counts = pollen_time[,8:ncol(pollen_time)]
-coords = pollen_time[,c(1:2,4)]
+coords = coordinates(pol_transform)
 
+#renaming long and lat to x,y to be consistent with all other naming
+colnames(coords)[1] <- 'x'
+colnames(coords)[2] <- 'y'
 
-# dat_pollen = data.frame(coords, pollen_props)
+# dat_pollen = data.frame(coords, pollen_props), merging
 dat_pollen = data.frame(coords, counts)
+#adding age column 
+df_bind_age = data.frame(age=pollen_time[,4], dat_pollen)
+
 
 library(reshape2)
-#melt will turn it into the long format 
-dat_pollen_melt = melt(dat_pollen, id.vars=c('long', 'lat','age'))
+#melt will turn it into the long format, id.vars keeps those columns 
+dat_pollen_melt = melt(df_bind_age, id.vars=c('x', 'y','age'))
 
 
-
-LCT = read.csv('taxon2LCT_translation.csv', stringsAsFactors = FALSE)
-LCT=LCT[-c(2:3,5:6)]
-
-LCT = rbind(LCT, c('ET', 'Other.conifer'))
-LCT = rbind(LCT, c('ST', 'Other.hardwood'))
-#adding LCT 
-
-
+#read in LCT table
+LCT = readRDS("R scripts/LCT_table.RDS")
 
 #matches the taxon from the dat_pollen_melt file to the LCT file and forms a  new column 'LCT' with the classification 
 #dat_pollen_melt$variable pulls the column variable from that dataframe
@@ -44,13 +52,26 @@ dat_pollen_melt = dat_pollen_melt[-which(is.na(dat_pollen_melt$LCT)),]
 any(is.na(dat_pollen_melt$LCT))
 
 
-library(dplyr)
-new <- group_by(dat_pollen_melt, long, lat, LCT)
+#eco region reprojection
+eco_reproj = readRDS("R scripts/eco_reproj.RDS")
+
+# for each x,y  in our pollen data, get the ecoregion
+lct_eco = over(pol_transform, eco_reproj)
+#keeping only the eco region columns and removing everything else
+lct_eco = lct_eco[,c('NA_L1NAME', 'NA_L2NAME')]
+
+#merging data
+df_weco = data.frame(dat_pollen_melt, lct_eco)
+
+#grouping data
+new <- group_by(df_weco, x, y, LCT)
 
 #dividing into chunks 
 #paleo <- tree.cores[tree.cores$age >= 150, ]
 paleo_bins <- seq(0, 20000, by = 2000)
+#using the age column to break up the data by the paleo_bins vector
 paleo_cut <- cut(new$age, include.lowest = TRUE, breaks = paleo_bins)
+#adds the column cut, 1 cut represents data for 2000 years
 new$cut <- as.integer(paleo_cut)
 
 #deleting age column and variable column which is taxon names
@@ -58,33 +79,24 @@ new$cut <- as.integer(paleo_cut)
 new = new[-c(3,4)]
 
 
-grouped_data<- group_by(new, long, lat, LCT, cut)
+grouped_data<- group_by(new, x, y, LCT, cut, NA_L2NAME)
+#summarizing data by summing the pollen counts 
 pol_summary = summarise(grouped_data, summed_counts = sum(value, na.rm=TRUE), .groups = 'keep')
 foo = pol_summary %>%
-  group_by(long, lat, cut) %>%
+  group_by(x, y, cut, NA_L2NAME) %>%
   mutate(pol_prop = summed_counts / sum(summed_counts))
 
+#deleting summed counts column no long necessary
+foo = foo[-c(6)]
 
+#pivot data so each LCT has its own column
+pivot_foo = foo %>%
+  pivot_wider(names_from = LCT, values_from = pol_prop)
 
+#deleting cut with NA values because it has a negative NA which will be included in the modern pollen dataset
+pivot_foo = pivot_foo[-which(is.na(pivot_foo$cut)),]
+#deleting NA ecoregions, still to be determined why 
+pivot_foo = pivot_foo[-which(is.na(pivot_foo$NA_L2NAME)),]
 
-#not sure what this does.....
-#dat_pollen_melt <- dat_pollen_melt[!is.na(dat_pollen_melt$cut),] # remove ages > highest time bin
-# assign unique ID to each distinct x, y coordinate
-#paleo_xyid <- paleo %>% dplyr::select(x,y) %>% distinct()
-#paleo_xyid$id <- as.character(seq(1, nrow(paleo_xyid), by = 1))
-
-# #grouped_data<- group_by(new, long, lat, LCT, cut)
-# pol_summary = summarise(new, summed_counts = sum(value), .groups = 'keep')
-# 
-# 
-# grouped <-new %>%
-#     group_by(long,lat,LCT,cut) %>%
-#     summarise(summed_counts = sum(value)) 
-# 
-# #converting into a data frame 
-# grouped = data.frame(grouped)
-# 
-# #need to convert into proportions...
-# pollen_props = apply(grouped, 1, prop)
-# 
-# 
+#saved pivot_foo with ecoregions - full dataset 
+saveRDS(pivot_foo, 'R scripts/pivot_table_full.RDS')
