@@ -1,6 +1,8 @@
 pollen_data=readRDS('pollen/pollen-modern-slice.RDS')
 
 library(dplyr)
+#deleting other for now
+pollen_data =pollen_data[-c(22)]
 
 #sums pollen counts for each site  
 complete_dat <- (pollen_data %>%
@@ -36,6 +38,7 @@ prop = function(x){
 
 #calculating proportions for each site
 pollen_props = t(apply(counts, 1, prop))
+rowSums(pollen_props)
 #merging pollen props and new reprojected coords
 dat_pollen = data.frame(coords, pollen_props)
 
@@ -60,14 +63,14 @@ saveRDS(LCT, "R scripts/LCT_table.RDS")
 #dat_pollen_melt$LCT before the equal sign makes a new column witht that name
 dat_pollen_melt$LCT = LCT[match(dat_pollen_melt$variable, LCT$taxon), 'LCT']
 
-dat_pollen_melt = dat_pollen_melt[-which(is.na(dat_pollen_melt$LCT)),]
 any(is.na(dat_pollen_melt$LCT))
 
 
 library(dplyr)
 new <- group_by(dat_pollen_melt, x, y, LCT)
 pol_summary = summarise(new, prop_summed = sum(value), .groups = 'keep')
-
+# foo = group_by(pol_summary, x,y)  %>%
+#   summarise(total = sum(prop_summed), .groups = 'keep')
 saveRDS(pol_summary, 'R scripts/pollen_modern_longversion.RDS')
 
 

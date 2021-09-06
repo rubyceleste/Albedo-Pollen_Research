@@ -54,38 +54,23 @@ saveRDS(eco_reproj, "R scripts/eco_reproj.RDS")
 # ggplot() +
 #   geom_path(data = eco, aes(x=long, y=lat, group=group))
 
-# convert data frame to spatial object
-# not sure if this step is necessary
-df_sp = SpatialPointsDataFrame(coords=df[,c('x', 'y')], data=df, proj4string = alb_proj)
-df_transform = spTransform(df_sp, alb_proj)
-# 
-# # for each x,y in our albedo grid, get the ecoregion
-# df_eco = over(df_sp, eco_reproj)
-# #keeping only the eco region columns and removing everything else
-# df_eco = df_eco[,c('NA_L1NAME', 'NA_L2NAME')]
-
-# put all the information in a single data frame
-#df_all = data.frame(coordinates(df_sp), df_eco)
-#saveRDS(df_all, 'R scripts/albedo_eco.RDS')
-
 #here we are starting to merge the data together 
 library(sp)
 
 pollen_modern = readRDS('R scripts/pollen_modern_longversion.RDS')
-pollen_modern = data.frame(pollen_modern)
+df_pm = SpatialPointsDataFrame(coords=pollen_modern[,c('x', 'y')], data=pollen_modern, proj4string = alb_proj)
 
 
 # for each x,y in our albedo grid, get the ecoregion
-lct_eco = over(df_transform, eco_reproj)
-
+lct_eco = over(df_pm, eco_reproj)
 # get albedo value for each pollen sample
-lct_alb = raster::extract(dat_resamp, df_transform)
+lct_alb = raster::extract(dat_resamp, df_pm)
 
 
 library(reshape2)
 #binding data- LCT, with prop-summed and the albedo values 
-dat_all = cbind(coordinates(df_sp),pollen_modern[,c('LCT', 'prop_summed')], lct_alb, lct_eco[,c('NA_L1NAME', 'NA_L2NAME')])
 
+dat_all = data.frame(coordinates(df_pm),pollen_modern[,c('LCT', 'prop_summed')], alb=lct_alb, lct_eco[,c('NA_L1NAME', 'NA_L2NAME')])
 saveRDS(dat_all, 'R scripts/dat_all-winter.RDS')
 
 
