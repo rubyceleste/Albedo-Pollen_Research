@@ -2,7 +2,7 @@ library(tidyr)
 library(raster)
 library(rgdal)
 #read in tif file of season wish to be used 
-albedo_dat = raster('bluesky/season-summer.tif')
+albedo_dat = raster('bluesky/season-winter.tif')
 
 # EPSG: 102001 (Canada Albers Equal Area Conic, North American Datum, 1983)
 alb_proj = crs(albedo_dat)
@@ -19,9 +19,12 @@ out_rast <- raster::raster(xmn = floor(borders[1,1]),
 
 out_rast <- raster::setValues(out_rast, 1:ncell(out_rast))
 
+
+
+
 # y is the raster with the new grid we want to resample to
 # need to construct y (or have downloaded object on a grid that you want to resample to)
-dat_resamp = resample(albedo_dat, out_rast, method="bilinear")
+dat_resamp = resample(albedo_dat, out_rast, method="ngb")
 
 #saveRDS(dat_resamp, 'R scripts/albedo_raster.RDS')
 
@@ -33,8 +36,16 @@ xy_alb = coordinates(dat_resamp)
 vals_alb = data.frame(raster::extract(dat_resamp, xy_alb, cellnumbers=T))
 colnames(vals_alb) = c('cell', 'value')
 
+
 # combine xy coordinates and values into a long format data frame
 df = data.frame(xy_alb, value = vals_alb[,'value'])
+
+
+
+#delete any NA albedo values
+any(is.na(df$value))
+df <- df[apply(df, 1, function(row) all(row !=0 )), ]
+saveRDS(df, 'R scripts/alb_all-winter.RDS')
 
 # ecoregions for canada only
 # eco = readOGR('data/Ecozones/', layer='ecozones')
@@ -57,7 +68,7 @@ saveRDS(eco_reproj, "R scripts/eco_reproj.RDS")
 #here we are starting to merge the data together 
 library(sp)
 
-pollen_modern = readRDS('R scripts/pollen_modern_longversion.RDS')
+pollen_modern = readRDS('R scripts/pollen_modern_pivot.RDS')
 df_pm = SpatialPointsDataFrame(coords=pollen_modern[,c('x', 'y')], data=pollen_modern, proj4string = alb_proj)
 
 
@@ -67,24 +78,39 @@ lct_eco = over(df_pm, eco_reproj)
 lct_alb = raster::extract(dat_resamp, df_pm)
 
 
+
 library(reshape2)
 #binding data- LCT, with prop-summed and the albedo values 
 
-dat_all = data.frame(coordinates(df_pm),pollen_modern[,c('LCT', 'prop_summed')], alb=lct_alb, lct_eco[,c('NA_L1NAME', 'NA_L2NAME')])
+dat_all = data.frame(coordinates(df_pm),pollen_modern[,c('ET', 'OL', 'ST')], alb=lct_alb, lct_eco[,c('NA_L1NAME', 'NA_L2NAME')])
+
+any(is.na(dat_all$alb))
+dat_all = dat_all[which(!is.na(dat_all$alb)),]
+
 saveRDS(dat_all, 'R scripts/dat_all-winter.RDS')
 
 
-# #do this for each season 
-# dat_OL = dat_all[which(dat_all$LCT == 'OL'),]
-# dat_ET = dat_all[which(dat_all$LCT == 'ET'),]
-# dat_ST = dat_all[which(dat_all$LCT == 'ST'),]
-# OLcover=lm(prop_summed ~ lct_alb , data=dat_OL)
+
+
+
+
+
+
+
+#winter = readRDS("R scripts/dat_all-winter.RDS")
+#do this for each season
+#subsets LCT
+# dat_OL = winter[which(winter$LCT == 'OL'),]
+# dat_ET = winter[which(winter$LCT == 'ET'),]
+# dat_ST = winter[which(winter$LCT == 'ST'),]
+# #does the linear model
+# OLcover = lm(prop_summed ~ lct_alb , data=dat_OL)
 # ET=lm(prop_summed ~ lct_alb, data=dat_ET)
 # ST=lm(prop_summed ~ lct_alb, data=dat_ST)
 # 
 # OLcover=lm(lct_alb~prop_summed , data=dat_OL)
 # 
-# 
+# #shows the summary for each linear model
 # summary(OLcover)
 # summary(ET)
 # summary(ST)

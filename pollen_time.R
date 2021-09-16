@@ -1,18 +1,41 @@
 library(raster)
 library(dplyr)
-pollen_time = readRDS('pollen/pollen-sites-times-series-all.RDS')
+library(maps)
+pollen_time = readRDS('pollen/pollen-sites-times-series-all_v2.0.RDS')
 
 pollen_time = data.frame(pollen_time)
 
 #deleting other column for now 
-pollen_time =pollen_time[-c(22)]
+#pollen_time =pollen_time[-c(22)]
 
 
 #renaming to match LCT file 
-names(pollen_time)[10] <- 'Artemisia'
+#names(pollen_time)[10] <- 'Artemisia'
 
 
 xy= pollen_time[,1:2]
+
+k=map.where(database = "world", xy[,1],xy[,2])
+k=data.frame(k,xy)
+#k[,1] = sapply(k[,1], function(x) if (is.na(x)){x=1} else {x=0})
+
+k = k[which(!is.na(k$k)),]
+get_c <- function(x) {if (substr(x, 1,6) =="Canada") {"Canada"} else if (substr(x, 1,6) =="USA:Al") {"Alaska"} else {NA}}
+
+k$country=sapply(k$k, get_c)
+#substr(k$k, 1,6) == "Canada"
+
+k = k[which(!is.na(k$country)),]
+
+
+#matches the taxon from the dat_pollen_melt file to the LCT file and forms a  new column 'LCT' with the classification 
+#dat_pollen_melt$variable pulls the column variable from that dataframe
+#variable is the column name with all the taxons
+#LCT$taxon pulls the column taxon from the csv file 
+#dat_pollen_melt$LCT before the equal sign makes a new column witht that name
+pollen_time_melt = melt(pollen_time, id.vars=c('x', 'y', 'age'))
+
+dat_pollen_melt$LCT = LCT[match(dat_pollen_melt$variable, LCT$taxon), 'LCT']
 
 #assigning a crs to the pollen coordinates
 spdf <- SpatialPointsDataFrame(coords = xy, data = pollen_time,
@@ -50,10 +73,9 @@ LCT = readRDS("R scripts/LCT_table.RDS")
 #dat_pollen_melt$LCT before the equal sign makes a new column witht that name
 dat_pollen_melt$LCT = LCT[match(dat_pollen_melt$variable, LCT$taxon), 'LCT']
 
-
-#here NA values are removed. ie. Other category, will return to this 
-#dat_pollen_melt = dat_pollen_melt[-which(is.na(dat_pollen_melt$LCT)),]
+#removing NA LCT whihc are taxons we don't want
 any(is.na(dat_pollen_melt$LCT))
+dat_pollen_melt= dat_pollen_melt[!is.na(dat_pollen_melt$LCT),]
 
 
 #eco region reprojection
@@ -99,8 +121,13 @@ pivot_foo = foo %>%
 
 #deleting cut with NA values because it has a negative NA which will be included in the modern pollen dataset
 pivot_foo = pivot_foo[-which(is.na(pivot_foo$cut)),]
+
 #deleting NA ecoregions, still to be determined why 
+#there are still Na ecoregions maybe in america?
+#come back to this
 pivot_foo = pivot_foo[-which(is.na(pivot_foo$NA_L2NAME)),]
 
 #saved pivot_foo with ecoregions - full dataset 
 saveRDS(pivot_foo, 'R scripts/pivot_table_full.RDS')
+
+pivot_foo=readRDS('R scripts/pivot_table_full.RDS')
