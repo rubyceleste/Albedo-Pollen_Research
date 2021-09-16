@@ -199,37 +199,3 @@ summary(model)
 dat_OL = dat_all[which(dat_all$LCT == 'OL'),]
 regr= lm(prop_summed ~ lct_alb, data=dat_OL)
 summary(regr)
-
-#estimate is the slope, std error, t value, and p value
-# linearre = lm(prop_summed ~ lct_alb, data= dat_all)
-# summary(linearre)
-
-# attributes(linearre)
-# linearre$coefficients
-#confidence interval, level tells you the interval 
-# confint(linearre, level = 0.99)
-# anova(linearre)
-
-# models = dat_all %>% group_by(LCT) %>% do(model = lm(prop_summed ~ lct_alb, data = .))
-# models$model
-
-
-
-#summary(models)
-#models$model[[]]
-#names(models$model[[1]])
-# rowwise(models) %>% tidy(models)
-
-
-# modek_summary= (dat_all %>%
-#           group_by(LCT) %>%
-#           lm(prop_summed~lct_alb, data=.))
-# 
-# summary(model)
-# 
-# 
-# fitted_model = dat_all %>% group_by(LCT) %>% do(model = lm(prop_summed ~ lct_alb, data = .))
-# 
-# fitted_model %>% broom::glance(model)
-
-

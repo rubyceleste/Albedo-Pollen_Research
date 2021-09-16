@@ -4,6 +4,10 @@ pollen_time = readRDS('pollen/pollen-sites-times-series-all.RDS')
 
 pollen_time = data.frame(pollen_time)
 
+#deleting other column for now 
+pollen_time =pollen_time[-c(22)]
+
+
 #renaming to match LCT file 
 names(pollen_time)[10] <- 'Artemisia'
 
@@ -48,7 +52,7 @@ dat_pollen_melt$LCT = LCT[match(dat_pollen_melt$variable, LCT$taxon), 'LCT']
 
 
 #here NA values are removed. ie. Other category, will return to this 
-dat_pollen_melt = dat_pollen_melt[-which(is.na(dat_pollen_melt$LCT)),]
+#dat_pollen_melt = dat_pollen_melt[-which(is.na(dat_pollen_melt$LCT)),]
 any(is.na(dat_pollen_melt$LCT))
 
 

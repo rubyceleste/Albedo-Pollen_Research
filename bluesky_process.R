@@ -2,7 +2,7 @@ library(tidyr)
 library(raster)
 library(rgdal)
 #read in tif file of season wish to be used 
-albedo_dat = raster('bluesky/season-winter.tif')
+albedo_dat = raster('bluesky/season-summer.tif')
 
 # EPSG: 102001 (Canada Albers Equal Area Conic, North American Datum, 1983)
 alb_proj = crs(albedo_dat)
