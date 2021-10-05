@@ -1,30 +1,54 @@
-pollen_data=readRDS('pollen/pollen-modern-slice_v2.0.RDS')
-
+library(raster)
+library(maps)
+library(reshape2)
 library(dplyr)
-#deleting other for now
-#pollen_data =pollen_data[-c(22)]
+library(tidyr)
+
+pollen_data=readRDS('data/pollen-modern-slice_v2.0.RDS')
+
+
+alb_proj = '+proj=aea +lat_1=50 +lat_2=70 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0
++ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs'
 
 #sums pollen counts for each site  
 complete_dat <- (pollen_data %>%
                    group_by(long, lat, sitename) %>%
                    summarise(across(ARTEMISIA:TAXUS, sum), .groups='keep'))
 
-#saveRDS(complete_dat, 'pollen/complete count.RDS')
 
-#rename column to match with LCT .csv
-#names(complete_dat)[6] <- 'Artemisia'
+complete_dat = data.frame(complete_dat)
 
 xy = complete_dat[,1:2]
 
+#don't know what to rename k lol
+#map.where() indicates what part of the world those coordinates are located
+k=map.where(database = "world", xy[,1],xy[,2])
+k=data.frame(k,xy,age=complete_dat[,4],complete_dat[,8:ncol(complete_dat)])
+#k[,1] = sapply(k[,1], function(x) if (is.na(x)){x=1} else {x=0})
+
+k = k[which(!is.na(k$k)),]
+#if name has Canada and USA:Al then keep, else give name NA
+get_c <- function(x) {if (substr(x, 1,6) =="Canada") {"Canada"} else if (substr(x, 1,6) =="USA:Al") {"Alaska"} else {NA}}
+
+k$country=sapply(k$k, get_c)
+#substr(k$k, 1,6) == "Canada"
+
+#delete NAs (which are countries not Canada and Alaska)
+k = k[which(!is.na(k$country)),]
+
+#seperating coordinates in different dataframe
+xy_new = k[-c(1,4:ncol(k))]
+
 #assigning a crs to the pollen coordinates
-spdf <- SpatialPointsDataFrame(coords = xy, data = complete_dat,
+spdf <- SpatialPointsDataFrame(coords = xy_new, data = k,
                                proj4string = CRS("+proj=longlat +datum=WGS84 +ellps=WGS84 +towgs84=0,0,0"))
+
 
 #transforming to the albedo crs
 pol_transform = spTransform(spdf, alb_proj)
 
 coords = coordinates(pol_transform)
-counts = complete_dat[,4:ncol(complete_dat)]
+counts = k[,5:ncol(k)]
 
 colnames(coords)[1] <- 'x'
 colnames(coords)[2] <- 'y'
@@ -40,6 +64,7 @@ prop = function(x){
 # #merging pollen props and new reprojected coords
 # dat_pollen = data.frame(coords, pollen_props)
 
+
 dat_pollen = data.frame(coords, counts)
 
 library(reshape2)
@@ -48,7 +73,7 @@ dat_pollen_melt = melt(dat_pollen, id.vars=c('x', 'y'))
 
 
 #reading in LCT
-LCT = read.csv('taxon2LCT_translation_v2.0.csv', stringsAsFactors = FALSE)
+LCT = read.csv('data/taxon2LCT_translation_v2.0.csv', stringsAsFactors = FALSE)
 LCT = LCT[,c('LCT', 'taxon')]
 
 
@@ -68,11 +93,12 @@ dat_pollen_melt= dat_pollen_melt[!is.na(dat_pollen_melt$LCT),]
 #don't need variable colunmn anymore
 dat_pollen_melt= dat_pollen_melt[-c(3)]
 
+dat_pollen_melt$value=as.numeric(dat_pollen_melt$value)
+
+
 foo = dat_pollen_melt %>%
   group_by(x,y,LCT) %>%
   summarise(count = sum(value))
-
-
 
 # propor=t(apply(foo, 1, prop))
 # b=foo %>%
@@ -82,7 +108,7 @@ foo = dat_pollen_melt %>%
 #   
 
 pivot_mod = foo %>%
-   pivot_wider(names_from = LCT, values_from = count)
+  pivot_wider(names_from = LCT, values_from = count)
 
 propor=t(apply(pivot_mod[,3:5], 1, prop))
 
@@ -91,20 +117,3 @@ saveRDS(pivot_mod, 'R scripts/pollen_modern_pivot.RDS')
 
 
 
-
-# new <- group_by(dat_pollen_melt, x, y, LCT)
-# pol_summary = summarise(new, prop_summed = sum(value), .groups = 'keep')
-# foo = group_by(pol_summary, x,y)  %>%
-#   summarise(total = sum(prop_summed), .groups = 'keep')
-#saveRDS(pol_summary, 'R scripts/pollen_modern_longversion.RDS')
-
-
-
-
-
-# pollen = readRDS("R scripts/pollen_modern_longversion.RDS")
-# pivot_pol = pollen %>%
-#   pivot_wider(names_from = LCT, values_from = prop_summed)
-# any(is.na(pivot_dat$alb))
-# # #which !(not) deleting NAs
-# pivot_dat = pivot_dat[which(!is.na(pivot_dat$alb)),]
