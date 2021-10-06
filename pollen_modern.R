@@ -100,20 +100,13 @@ foo = dat_pollen_melt %>%
   group_by(x,y,LCT) %>%
   summarise(count = sum(value))
 
-# propor=t(apply(foo, 1, prop))
-# b=foo %>%
-#   group_by(x,y, LCT)%>%
-#   #summarise(total = n())%>%
-#   mutate(prop_sum = count/sum(count))
-#   
-
 pivot_mod = foo %>%
   pivot_wider(names_from = LCT, values_from = count)
 
 propor=t(apply(pivot_mod[,3:5], 1, prop))
 
 pivot_mod = data.frame(pivot_mod[,1:2], propor)
-saveRDS(pivot_mod, 'R scripts/pollen_modern_pivot.RDS')
+saveRDS(pivot_mod, 'data/pollen_modern_pivot.RDS')
 
 
 
