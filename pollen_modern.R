@@ -77,7 +77,7 @@ LCT = read.csv('data/taxon2LCT_translation_v2.0.csv', stringsAsFactors = FALSE)
 LCT = LCT[,c('LCT', 'taxon')]
 
 
-saveRDS(LCT, "R scripts/LCT_table.RDS")
+saveRDS(LCT, "data/LCT_table.RDS")
 
 #matches the taxon from the dat_pollen_melt file to the LCT file and forms a  new column 'LCT' with the classification 
 #dat_pollen_melt$variable pulls the column variable from that dataframe
