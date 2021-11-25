@@ -13,17 +13,28 @@ alb_proj = '+proj=aea +lat_1=50 +lat_2=70 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0
 #sums pollen counts for each site  
 complete_dat <- (pollen_data %>%
                    group_by(long, lat, sitename) %>%
-                   summarise(across(ARTEMISIA:TAXUS, sum), .groups='keep'))
+                   summarise(across(ARTEMISIA:CUPRESSAX, sum), .groups='keep'))
 
 
 complete_dat = data.frame(complete_dat)
+
+
+#summing columns of pollen 
+# pollen = complete_dat[-c(1:3)]
+# polsum = colSums(pollen)
+# polsum = data.frame(polsum)
+# foo = data.frame(order(polsum))
+# which(polsum>60000)
+# 4  5  6  8  9 32
+#picea, pinus, poaceae, ambrosia, betula, quercus
 
 xy = complete_dat[,1:2]
 
 #don't know what to rename k lol
 #map.where() indicates what part of the world those coordinates are located
 k=map.where(database = "world", xy[,1],xy[,2])
-k=data.frame(k,xy,age=complete_dat[,4],complete_dat[,8:ncol(complete_dat)])
+#k=data.frame(k,xy,age=complete_dat[,4],complete_dat[,8:ncol(complete_dat)])
+k=data.frame(k,xy,complete_dat[,4:ncol(complete_dat)])
 #k[,1] = sapply(k[,1], function(x) if (is.na(x)){x=1} else {x=0})
 
 k = k[which(!is.na(k$k)),]
@@ -48,7 +59,7 @@ spdf <- SpatialPointsDataFrame(coords = xy_new, data = k,
 pol_transform = spTransform(spdf, alb_proj)
 
 coords = coordinates(pol_transform)
-counts = k[,5:ncol(k)]
+counts = k[,4:ncol(k)]
 
 colnames(coords)[1] <- 'x'
 colnames(coords)[2] <- 'y'
