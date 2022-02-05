@@ -1,5 +1,7 @@
 library(ClimClass)
 
+source('thornthwaite.R')
+
 # 
 # data(Trent_climate)
 # 
