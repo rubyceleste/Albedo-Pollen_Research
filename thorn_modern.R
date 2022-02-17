@@ -1,4 +1,7 @@
 library(ClimClass)
+library(sp)
+library(rgdal)
+library(dplyr)
 
 source('thornthwaite.R')
 
@@ -20,28 +23,31 @@ source('thornthwaite.R')
 alb_proj = '+proj=aea +lat_1=50 +lat_2=70 +lat_0=40 +lon_0=-96 +x_0=0 +y_0=0
 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +datum=NAD83'
 
+# CRS("+init=EPSG:4326")
+proj = '+init=epsg:4326 +proj=longlat +ellps=WGS84
++datum=WGS84 +no_defs +towgs84=0,0,0'
 
 pollen_modern = readRDS('data/pollen_modern_pivot.RDS')
-df_pm    = SpatialPointsDataFrame(coords=pollen_modern[,c('x', 'y')], data=pollen_modern, proj4string = crs(alb_proj))
-df_pm_ll = spTransform(df_pm, CRS("+init=EPSG:4326"))
+df_pm    = SpatialPointsDataFrame(coords=pollen_modern[,c('x', 'y')], data=pollen_modern, proj4string = CRS(alb_proj))
+df_pm_ll = spTransform(df_pm, proj)
 coords = coordinates(df_pm_ll)
 colnames(coords) = c('long', 'lat')
 df_pm = data.frame(coords, df_pm)[,1:7]
 
+tmax = read.csv('data/tmax_CRU.csv', stringsAsFactors = FALSE)
+tmax = tmax[which(tmax$year>2000),]
+tmin = read.csv('data/tmin_CRU.csv', stringsAsFactors = FALSE)
+tmin = tmin[which(tmin$year>2000),]
+ppt  = read.csv('data/ppt_CRU.csv', stringsAsFactors = FALSE)
+ppt = ppt[which(ppt$year>2000),]
 
-tmax = read.csv('data/tmax_cangrd.csv', stringsAsFactors = FALSE)
-tmin = read.csv('data/tmin_cangrd.csv', stringsAsFactors = FALSE)
-ppt  = read.csv('data/ppt_cangrd.csv', stringsAsFactors = FALSE)
+# why won't this join work?!?!
+clim = left_join(ppt, tmin)
+clim = left_join(clim, tmax)
 
-# year_df = data.frame(year_name = c('X1', 'X2', 'X3'), year = c(1961, 1962, 1963))
-
-foo = merge(tmax, tmin, by=c('x', 'y', 'site', 'month', 'year'))
-foo = merge(foo, ppt)
-foo = foo[,c('site', 'year', 'month', 'ppt', 'tmin', 'tmax')]
-
-foo = foo[order(foo$site, foo$year, foo$month),]
-# foo$year = year_df[match(foo$year, year_df$year_name), 'year']
-colnames(foo) = c('site', 'year', 'month', 'P', 'Tn', 'Tx')
+clim = clim[order(clim$site, clim$year, clim$month),]
+clim = clim[,c('site', 'year', 'month', 'ppt', 'tmin', 'tmax')]
+colnames(clim) = c('site', 'year', 'month', 'P', 'Tn', 'Tx')
 
 sites = unique(foo$site)
 N_sites = length(sites)
