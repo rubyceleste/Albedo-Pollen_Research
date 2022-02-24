@@ -2,6 +2,8 @@ library(ClimClass)
 library(sp)
 library(rgdal)
 library(dplyr)
+library(geosphere)
+library(reshape2)
 
 source('thornthwaite.R')
 
@@ -49,7 +51,10 @@ clim = clim[order(clim$site, clim$year, clim$month),]
 clim = clim[,c('site', 'year', 'month', 'ppt', 'tmin', 'tmax')]
 colnames(clim) = c('site', 'year', 'month', 'P', 'Tn', 'Tx')
 
-sites = unique(foo$site)
+first_year = min(clim$year)
+last_year  = max(clim$year)
+
+sites = unique(clim$site)
 N_sites = length(sites)
 
 thorn = list()
@@ -62,20 +67,23 @@ for (i in 1:N_sites){
   # print(i)
   
   site = sites[i]
-  dat_sub = foo[which(foo$site == site),2:6]
+  dat_sub = clim[which(clim$site == site),2:6]
   if (all(is.na(dat_sub$P))){
     print(i)
     next
   }
   
-  normals = climate(dat_sub, first.yr=1961, last.yr=1963, max.perc.missing=15)
+  normals = climate(dat_sub, 
+                    first.yr = first_year, 
+                    last.yr  = last_year, 
+                    max.perc.missing = 15)
   
-  thorn[[i]] <-thornthwaite(series=dat_sub, 
-                           clim_norm=normals,
-                           latitude = df_pm[i,'lat'], 
-                           first.yr=1961, 
-                           last.yr=1963, 
-                           snow_melt_coeff=c(0.5,0.5))
+  thorn[[i]] <-thornthwaite(series    = dat_sub, 
+                            clim_norm = normals,
+                            latitude  = df_pm[i,'lat'], 
+                            first.yr  = first_year, 
+                            last.yr   = last_year, 
+                            snow_melt_coeff = c(0.5,0.5))
   
   snow_site = data.frame(site=i, month=as.numeric(seq(1,12)), thorn[[i]]$W_balance$Snowpack)
   snow_site_melt = melt(snow_site, id.vars=c('month', 'site'))
