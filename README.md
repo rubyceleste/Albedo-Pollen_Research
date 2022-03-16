@@ -24,4 +24,10 @@ snow_probability.R is the code for snow prob from MODIS data, saves df with x,y,
 elevation.R adds elevation data for coordinates, final df all-data.RDS includes x,y,LCT,elevation,finealb,snowprob
 
 
+figures_main.R uses pollen-modern-proportions.RDS which is proportions of all taxon. comes from pollen_modern????
+
+
+
+
+
 #all scripts here good to be pushed
