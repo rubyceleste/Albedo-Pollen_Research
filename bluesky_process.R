@@ -14,7 +14,7 @@ out_rast <- raster::raster(xmn = floor(borders[1,1]),
                            xmx = ceiling(borders[1,2]),
                            ymn = floor(borders[2,1]),
                            ymx = ceiling(borders[2,2]),
-                           resolution =24000,
+                           resolution =8000,
                            crs = alb_proj)
 
 out_rast <- raster::setValues(out_rast, 1:ncell(out_rast))
@@ -24,7 +24,7 @@ out_rast <- raster::setValues(out_rast, 1:ncell(out_rast))
 # need to construct y (or have downloaded object on a grid that you want to resample to)
 dat_resamp = resample(albedo_dat, out_rast, method="ngb")
 
-# saveRDS(dat_resamp, 'data/albedo_december.RDS')
+saveRDS(dat_resamp, 'data/albedo_december8km.RDS')
 # # 
 # # get x and y coordinates for each cell
 # xy_alb = coordinates(dat_resamp_fall)
@@ -89,18 +89,18 @@ pollen_modern = readRDS('data/pollen_modern_pivot.RDS')
 df_pm = SpatialPointsDataFrame(coords=pollen_modern[,c('x', 'y')], data=pollen_modern, proj4string = alb_proj)
 
 
-jan_reproj = readRDS('data/albedo_january.RDS')
-feb_reproj = readRDS('data/albedo_february.RDS')
-mar_reproj = readRDS('data/albedo_march.RDS')
-april_reproj = readRDS('data/albedo_april.RDS')
-may_reproj = readRDS('data/albedo_may.RDS')
-june_reproj = readRDS('data/albedo_june.RDS')
-july_reproj = readRDS('data/albedo_july.RDS')
-aug_reproj = readRDS('data/albedo_august.RDS')
-sept_reproj = readRDS('data/albedo_september.RDS')
-oct_reproj = readRDS('data/albedo_october.RDS')
-nov_reproj = readRDS('data/albedo_november.RDS')
-dec_reproj = readRDS('data/albedo_december.RDS')
+jan_reproj = readRDS('data/albedo_january8km.RDS')
+feb_reproj = readRDS('data/albedo_february8km.RDS')
+mar_reproj = readRDS('data/albedo_march8km.RDS')
+april_reproj = readRDS('data/albedo_april8km.RDS')
+may_reproj = readRDS('data/albedo_may8km.RDS')
+june_reproj = readRDS('data/albedo_june8km.RDS')
+july_reproj = readRDS('data/albedo_july8km.RDS')
+aug_reproj = readRDS('data/albedo_august8km.RDS')
+sept_reproj = readRDS('data/albedo_september8km.RDS')
+oct_reproj = readRDS('data/albedo_october8km.RDS')
+nov_reproj = readRDS('data/albedo_november8km.RDS')
+dec_reproj = readRDS('data/albedo_december8km.RDS')
 
 
 # for each x,y in our albedo grid, get the ecoregion
@@ -144,6 +144,6 @@ dat_all = data.frame(coordinates(df_pm),pollen_modern[,c('ET', 'OL', 'ST')],
 # 
 # dat_all = dat_all[which(dat_all$alb>0),]
 
-saveRDS(dat_all, 'data/dat_all_monthly.RDS')
+saveRDS(dat_all, 'data/dat_all_monthly8km.RDS')
 
 

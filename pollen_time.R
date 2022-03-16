@@ -125,3 +125,4 @@ pivot_foo = pivot_foo[-which(is.na(pivot_foo$NA_L2NAME)),]
 #saved pivot_foo with ecoregions - full dataset 
 saveRDS(pivot_foo, 'data/pollen_time-full.RDS')
 
+pollen_time = readRDS('data/pollen_time-full.RDS')
