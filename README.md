@@ -25,7 +25,8 @@ elevation.R adds elevation data for coordinates, final df all-data.RDS includes 
 
 
 figures_main.R uses pollen-modern-proportions.RDS which is proportions of all taxon. comes from pollen_modern????
-
+albedo_figure.R 
+  both figure files need to be cleaned and more detailed descriptions of figures
 
 
 
