@@ -28,7 +28,13 @@ figures_main.R uses pollen-modern-proportions.RDS which is proportions of all ta
 albedo_figure.R 
   both figure files need to be cleaned and more detailed descriptions of figures
 
+step...
+thornthwaite model script 
 
+
+
+step ...
+using all-data can be plugged into model
 
 
 #all scripts here good to be pushed
