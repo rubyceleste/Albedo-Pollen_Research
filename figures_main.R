@@ -5,7 +5,7 @@ library(reshape2)
 library(mapdata)
 library(maps)
 library(sp)
-
+library(scatterpie)
 
 all_data = readRDS('data/dat_all_monthly.RDS')
 pollen_props = readRDS('pollen-modern-proportions.RDS')
@@ -50,35 +50,32 @@ ggplot()+
              outlier.size=2, notch=FALSE)
   
 
-#map of just albedo data 
+#map zlbedo values across canada and alaska
 ggplot()+
-  geom_point(data = df12, aes(x=x, y=y, color= alb_dec))+
+  geom_point(data = all_df, aes(x=x, y=y, color= finealb01))+
   geom_polygon(data=world_proj, aes(x=x, y=y, group=group), color='white', fill=NA)+
   scale_color_distiller(type = 'seq', palette = "YlOrBr")
 
 
 
+##plotting pollen proportions of a taxon on the map
+# ggplot()+
+#   geom_point(data = pollen_props, aes(x=x, y=y, color= ARTEMISIA)+
+#   geom_polygon(data=world_proj, aes(x=x, y=y, group=group), color='white', fill=NA)+
+#   scale_color_distiller(type = 'seq', palette = "YlOrBr")
 
-ggplot()+
-  geom_point(data = df, aes(x=x, y=y, color= value))+
-  geom_polygon(data=world_proj, aes(x=x, y=y, group=group), color='white', fill=NA)+
-  scale_color_distiller(type = 'seq', palette = "YlOrBr")
+##not working 
+# ggplot()+
+#   geom_scatterpie(data = melt_all_prop, aes(x=x, y=y), cols='variable', long_fromat =TRUE)+
+#   coord_fixed()+
+#   geom_scatterpie_legend(d$radius, x=-160, y=-55)+
+#   geom_polygon(data=world_proj, aes(x=x, y=y, group=group), color='white', fill=NA)+
+#   scale_color_distiller(type = 'seq', palette = "YlOrBr")
 
 
-
-
-# p <- ggplot(world_proj, aes(x, y)) +
-# geom_map(map=world_proj, aes(map_id=region), fill=NA, color="black") +
-# coord_quickmap()
-#prints map
-# p
-#
-
-ggplot()+
-  geom_scatterpie(data = melt_all_prop, aes(x=x, y=y), cols='variable', long_fromat =TRUE)+
-  coord_fixed()+
-  geom_scatterpie_legend(d$radius, x=-160, y=-55)+
-  geom_polygon(data=world_proj, aes(x=x, y=y, group=group), color='white', fill=NA)+
-  scale_color_distiller(type = 'seq', palette = "YlOrBr")
-
-# 
+ggplot(world, aes(long, lat)) +
+  geom_map(map=world, aes(map_id=region), fill=NA, color="black")+
+  coord_quickmap()+
+  geom_scatterpie(aes(x=long, y=lat, group=region, r=radius),
+                    data=pollen_props, cols=ARTEMISIA, color=NA, alpha=.8) +
+  geom_scatterpie_legend(pollen_propsradius, x=-160, y=-55)
