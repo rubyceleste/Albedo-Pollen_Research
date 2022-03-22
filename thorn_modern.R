@@ -62,7 +62,7 @@ N_sites = length(sites)
 
 # try varying snow_melt_coeff
 # default value is 1
-snow_melt_coeff = c(0.75, 0.25)
+snow_melt_coeff = c(0.75, 0.25) # c(0.5, 0.25, 0.25)
 
 Tsnow = 1
 
@@ -127,7 +127,7 @@ ggplot()+
 
 summary(snow$snow)
 
-thresh = 150
+thresh = 75
 
 snow$snowcover = NA
 snow[which(snow$snow >= thresh), 'snowcover'] = 1
@@ -172,6 +172,7 @@ psnow_melt = melt(psnow, id.vars=c('site'))
 psnow_melt$month = substr(psnow_melt$variable, 6,7)
 psnow_melt$month = as.numeric(psnow_melt$month)
 psnow_melt$variable = substr(psnow_melt$variable, 1,5)
+colnames(psnow_melt) = c('site', 'variable', 'psnow', 'month')
 
 
 
@@ -181,65 +182,72 @@ alb_melt = melt(alb, id.vars=c('site'))
 alb_melt$month = substr(alb_melt$variable, 8,9)
 alb_melt$month = as.numeric(alb_melt$month)
 alb_melt$variable = substr(alb_melt$variable, 1,7)
+colnames(alb_melt) = c('site', 'variable', 'alb', 'month')
 
-dat = data.frame(snow_mean, psnow=psnow_melt$value, alb=alb_melt$value/1000)
+
+dat = merge(snow_mean, psnow_melt, by=c('site', 'month'))
+dat = merge(dat, alb_melt[,-2], by=c('site', 'month'))
+dat$alb = dat$alb/1000
+
+
+# dat = data.frame(snow_mean, psnow=psnow_melt$value, alb=alb_melt$value/1000)
 
 ## compare variables with alb
 ggplot(data=dat) +
   geom_point(aes(x=psnow, y=alb)) +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(x=snowpack, y=alb)) +
   # geom_smooth(aes(x=snowpack, y=alb), formula = y~x, method='lm') +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(x=log(snowpack), y=alb)) +
   # geom_smooth(aes(x=log(snowpack), y=alb), formula = y~x, method='lm') +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(x=tsnow, y=alb)) +
   # geom_smooth(aes(x=tsnow, y=alb), formula = y~x, method='lm') +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ggplot(data=dat) +
-  geom_point(aes(x=log(ppt), y=alb)) +
-  facet_wrap(~month, scales="free")
+  geom_point(aes(x=ppt, y=alb)) +
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(x=tmin, y=alb)) +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(x=et, y=alb)) +
   # geom_smooth(aes(x=et, y=alb), formula = y~x, method='lm') +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ## compare variables with psnow
 
 ggplot(data=dat) +
   geom_point(aes(x=psnow, y=tsnow)) +
-  facet_wrap(~month, scales="free")
-
-ggplot(data=dat) +
-  geom_point(aes(y=snowpack, x=psnow)) +
-  # geom_smooth(aes(y=snowpack, x=psnow), formula = y~x, method='lm') +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(y=et, x=psnow)) + 
   # geom_smooth(aes(y=et, x=psnow), formula = y~x, method='lm') +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(y=ppt, x=psnow)) +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
+
+ggplot(data=dat) +
+  geom_point(aes(y=snowpack, x=psnow)) +
+  # geom_smooth(aes(y=snowpack, x=psnow), formula = y~x, method='lm') +
+  facet_wrap(~month)
 
 ggplot(data=dat) +
   geom_point(aes(y=log(snowpack), x=psnow)) +
-  facet_wrap(~month, scales="free")
+  facet_wrap(~month)
 
 ## compare others from thorn
 

@@ -18,7 +18,23 @@ monthly_ABOVE.R
 albedo_figures.R
   figures showing how each varible are related to each other 
 
-
+snow_probability.R is the code for snow prob from MODIS data, saves df with x,y,LCT and snow prob from jan-dec. modern data
 
   
-  
+elevation.R adds elevation data for coordinates, final df all-data.RDS includes x,y,LCT,elevation,finealb,snowprob
+
+
+figures_main.R uses pollen-modern-proportions.RDS which is proportions of all taxon. comes from pollen_modern????
+albedo_figure.R 
+  both figure files need to be cleaned and more detailed descriptions of figures
+
+step...
+thornthwaite model script 
+
+
+
+step ...
+using all-data can be plugged into model
+
+
+#all scripts here good to be pushed
