@@ -2,11 +2,10 @@ library(tidyr)
 library(raster)
 library(rgdal)
 library(dplyr)
+library(ggplot2)
 #read in tif file of season wish to be used 
-albedo_dat = raster('data/ABOVE/season-winter.tif')
+albedo_dat = raster('data/ABOVE/new-month-01.tif')
 
-dat = readRDS('data/dat_all.RDS')
-dat_time = readRDS('data/pollen_time-full.RDS')
 prediction_dat = readRDS('data/prediction_data.RDS')
 
 # EPSG: 102001 (Canada Albers Equal Area Conic, North American Datum, 1983)
@@ -30,8 +29,8 @@ out_rast <- raster::setValues(out_rast, 1:ncell(out_rast))
 # +units=m +no_defs 
 
 #coordinates
-xy = dat_time[1:2]
-xy = prediction_dat[4:5]
+#xy = dat_time[1:2]
+xy = prediction_dat[2:3]
 
 #reassigning new CRS
 spdf <- SpatialPointsDataFrame(coords = xy, data = prediction_dat, 
@@ -50,8 +49,6 @@ cell = raster::extract(out_rast, coords)
 
 #merging column with full data frame 
 merge = data.frame(prediction_dat, cell)
-
-merge = data.frame(dat_winter, cell)
 
 # 
 # #this works with dat and calculates the averages
@@ -90,15 +87,15 @@ foo =time_mean %>%
 
 ggplot()+
   geom_tile(data=foo, aes(x=x, y=y, fill = diff))+
-  scale_fill_gradient2(low = 'blue', high = 'red', mid= 'white')+
-  facet_wrap(~cut)
+  scale_fill_gradient2(low = 'blue', high = 'red', mid= 'white',  limits = c(-0.2,0.2))+
+  facet_wrap(~cut)+
+  theme_bw()+
+  theme(axis.line = element_line(colour = "black"),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank()) 
   # scale_fill_brewer(type = "div", palette = 'RdBu')+
  
-
-
-
-
-
 
 
 
