@@ -21,21 +21,22 @@ Step 5
 elevation.R adds elevation data for coordinates where we have pollen data, final df all-data.RDS includes x,y,LCT,elevation,finealb,snowprob
 
 
-albedo_figures.R
-  figures showing how each varible are related to each other
 
-
-figures_main.R uses pollen-modern-proportions.RDS which is proportions of all taxon. comes from pollen_modern????
-albedo_figure.R 
-  both figure files need to be cleaned and more detailed descriptions of figures
-
-step...
-thornthwaite model script 
+figures_main.R and albedo_figure.R use ggplot to demonstrate different relationships between albedo, snow, etc... 
+difference_maps.R calculates the difference in albedo every 2000 years for prediction albedo data  
+  
+step 6 
+thornthwaite model script predicts snowpack......
 
 
 
 step ...
 using all-data can be plugged into model
+calibration_model.R file 
+
+
+step...
+model_predict.R uses the model created to predict albedo values back through time 
 
 
 #all scripts here good to be pushed except github is being dumbbb
